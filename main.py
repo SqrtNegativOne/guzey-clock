@@ -2,16 +2,20 @@ import tkinter as tk
 from datetime import datetime, timedelta
 from loguru import logger
 
-logger.add('stopwatch.log', level='INFO')
+logger.add('stopwatch.log')
 
 STOPWATCH_BACKGROUND = 'black'
-LABEL_PAUSED_COLOUR = 'white'
-LABEL_WORK_COLOUR = 'green'
-LABEL_BREAK_COLOUR = 'red'
-STOPWATCH_FONT = ('Consolas', 20)
-DEFAULT_ALPHA = 0.8
-WIDTH = 350
-HEIGHT = 100
+LABEL_PAUSED_COLOUR = 'grey'
+LABEL_WORK_COLOUR = 'white'
+LABEL_BREAK_COLOUR = '#2ecc71'
+STOPWATCH_FONT = ('Consolas', 12)
+DEFAULT_ALPHA = 0.7
+WIDTH = 200
+HEIGHT = 10
+
+from ctypes import windll
+windll.shcore.SetProcessDpiAwareness(1) # Updates all screen and window resolutions by ×1.5. Required for cleaner fonts.
+windll.kernel32.SetConsoleTitleW("GuzeyClock") # Changes the title of the console window, if it exists.
 
 class Stopwatch(tk.Tk):
     def __init__(self, *args, **kwargs) -> None:
@@ -25,7 +29,7 @@ class Stopwatch(tk.Tk):
         self.alpha: float = DEFAULT_ALPHA
         self.attributes('-alpha', self.alpha)
         self.minsize(width=WIDTH, height=HEIGHT)
-        self.geometry('+0+800')
+        self.geometry('+0+0')
         
         self.label: tk.Label = tk.Label(
             self,
@@ -34,7 +38,7 @@ class Stopwatch(tk.Tk):
             font=STOPWATCH_FONT,
             bg=STOPWATCH_BACKGROUND
         )
-        self.label.pack(expand=True, fill='both')
+        self.label.pack()
 
         self.bind_everything()
         self.update_clock()
@@ -65,7 +69,6 @@ class Stopwatch(tk.Tk):
         now = datetime.now()
         h = now.hour
         m = now.minute
-        s = now.second
 
         is_long_break_hour = (h % 3 == 0)
 
@@ -101,8 +104,7 @@ class Stopwatch(tk.Tk):
         rem_s = int(remaining.total_seconds())
         rem_m, rem_s = divmod(rem_s, 60)
 
-        time_str = now.strftime("%H:%M:%S")
-        display_text = f"{time_str}\n{state}: {rem_m:02d}:{rem_s:02d} left"
+        display_text = f"{state}: {rem_m:02d}:{rem_s:02d} left"
         
         self.label.config(text=display_text, foreground=color)
         
