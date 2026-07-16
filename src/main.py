@@ -40,6 +40,9 @@ class Stopwatch(tk.Tk):
         )
         self.label.pack()
 
+        self.muted = False
+        self.current_state = None
+
         self.bind_everything()
         self.update_clock()
 
@@ -48,6 +51,12 @@ class Stopwatch(tk.Tk):
         self.bind('<B1-Motion>', self.drag)
         self.bind('<ButtonRelease-1>', self.release)
         self.bind('<Double-Button-1>', self.quit_app)
+        self.bind('<m>', self.toggle_mute)
+        self.bind('<M>', self.toggle_mute)
+
+    def toggle_mute(self, event) -> None:
+        self.muted = not self.muted
+        logger.info(f"Sound effects {'muted' if self.muted else 'unmuted'}.")
 
     def click(self, event) -> None:
         self.x = event.x
@@ -73,7 +82,7 @@ class Stopwatch(tk.Tk):
         is_long_break_hour = (h % 3 == 0)
 
         if is_long_break_hour and m < 35:
-            state = "BREAK"
+            state = "LONG_BREAK"
             next_min = 35
             color = LABEL_BREAK_COLOUR
         else:
@@ -108,7 +117,35 @@ class Stopwatch(tk.Tk):
         
         self.label.config(text=display_text, foreground=color)
         
+        if self.current_state is not None and self.current_state != state:
+            self.on_state_change(self.current_state, state)
+        self.current_state = state
+        
         self.after(200, self.update_clock)
+
+    def on_state_change(self, old_state: str, new_state: str) -> None:
+        logger.info(f"State changed from {old_state} to {new_state}")
+        import os
+        src_dir = os.path.dirname(os.path.abspath(__file__))
+        if not self.muted:
+            import winsound
+            sound_file = None
+            if old_state == "WORK" and new_state == "BREAK":
+                sound_file = os.path.join(src_dir, "sounds", "work_to_break.wav")
+            elif old_state == "BREAK" and new_state == "WORK":
+                sound_file = os.path.join(src_dir, "sounds", "break_to_work.wav")
+            elif old_state == "WORK" and new_state == "LONG_BREAK":
+                sound_file = os.path.join(src_dir, "sounds", "work_to_long_break.wav")
+            elif old_state == "LONG_BREAK" and new_state == "WORK":
+                sound_file = os.path.join(src_dir, "sounds", "long_break_to_work.wav")
+            
+            if sound_file and os.path.exists(sound_file):
+                winsound.PlaySound(sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
+
+        import subprocess
+        import sys
+        effect_script = os.path.join(src_dir, "effect.py")
+        subprocess.Popen([sys.executable, effect_script], creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
 
 if __name__ == '__main__':
     app = Stopwatch()
