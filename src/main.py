@@ -75,6 +75,7 @@ class Stopwatch(tk.Tk):
         self.destroy()
 
     def update_clock(self) -> None:
+        self.attributes('-topmost', True)
         now = datetime.now()
         h = now.hour
         m = now.minute
