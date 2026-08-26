@@ -1,8 +1,21 @@
+import os
+import sys
 import tkinter as tk
 from datetime import datetime, timedelta
 from loguru import logger
 
-logger.add('stopwatch.log')
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_DIR = os.path.join(PROJECT_ROOT, 'log')
+os.makedirs(LOG_DIR, exist_ok=True)
+logger.add(os.path.join(LOG_DIR, 'stopwatch.log'), rotation="10 MB", retention="10 days", enqueue=True)
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+sys.excepthook = handle_exception
 
 STOPWATCH_BACKGROUND = 'black'
 LABEL_PAUSED_COLOUR = 'grey'

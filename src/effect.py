@@ -1,6 +1,22 @@
+import os
+import sys
 import tkinter as tk
 from ctypes import windll
 import threading
+from loguru import logger
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_DIR = os.path.join(PROJECT_ROOT, 'log')
+os.makedirs(LOG_DIR, exist_ok=True)
+logger.add(os.path.join(LOG_DIR, 'effect.log'), rotation="10 MB", retention="10 days", enqueue=True)
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+sys.excepthook = handle_exception
 
 class ScreenEffect(tk.Tk):
     def __init__(self):
